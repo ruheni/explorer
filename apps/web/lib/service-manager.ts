@@ -186,7 +186,6 @@ async function getBlockBy(
               Proposer: blockResponse.result.block.header.proposer_address,
             }
       ),
-      computed: {},
       context: {
         network: networkName,
         entityTypeName: "Block",
@@ -215,7 +214,6 @@ async function getTransactionByHash(
     }
 
     const txResponse = (await response.json()) as JSONRPCResponse<Transaction>;
-    const Messages = getMessages(txResponse.result.tx);
     const txEntity: Entity = {
       uniqueIdentifier: txResponse.result.hash,
       uniqueIdentifierLabel: "Hash",
@@ -228,9 +226,6 @@ async function getTransactionByHash(
           "/" +
           txResponse.result.tx_result.gas_wanted,
       }),
-      computed: {
-        Messages,
-      },
       context: {
         network: networkName,
         entityTypeName: "Transaction",
@@ -258,7 +253,6 @@ async function getTransactionsByHeight(
 
     const txsResponse = (await response.json()) as JSONRPCResponse<TxSearch>;
     return txsResponse.result.txs.map((tx) => {
-      const Messages = getMessages(tx.tx);
       const txEntity: Entity = {
         uniqueIdentifier: tx.hash,
         uniqueIdentifierLabel: "Hash",
@@ -269,9 +263,6 @@ async function getTransactionsByHeight(
           "Gas (used/wanted)":
             tx.tx_result.gas_used + "/" + tx.tx_result.gas_wanted,
         }),
-        computed: {
-          Messages,
-        },
         context: {
           network: networkName,
           entityTypeName: "Transaction",
@@ -282,6 +273,24 @@ async function getTransactionsByHeight(
     });
   } catch {
     return [];
+  }
+}
+
+async function getMessageByPath(path: string, networkBase: string) {
+  try {
+    const parts = path.split("/");
+    const transactionHash = parts[0];
+    const index = Number(parts[1]);
+    const response = await fetch(`${networkBase}/tx?hash=${transactionHash}`);
+    if (!response.ok) {
+      throw Error(`Response code ${response.status}: ${response.statusText}`);
+    }
+
+    const txResponse = (await response.json()) as JSONRPCResponse<Transaction>;
+    const Messages = getMessages(txResponse.result.tx);
+    return Messages[index];
+  } catch {
+    return null;
   }
 }
 
@@ -324,27 +333,12 @@ async function getTransactionsByAddress(address: string, networkName: string) {
       (a, b) => Number(b.height) - Number(a.height)
     );
     return allTxs.map((tx) => {
-      const Messages = getMessages(tx.tx);
-      const txEntity: Entity = {
-        uniqueIdentifier: tx.hash,
-        uniqueIdentifierLabel: "Hash",
-        metadata: buildMetadata({
-          Height: tx.height,
-          Index: String(tx.index),
-          Status: { type: "status", payload: !tx.tx_result.code },
-          "Gas (used/wanted)":
-            tx.tx_result.gas_used + "/" + tx.tx_result.gas_wanted,
-        }),
-        computed: {
-          Messages,
-        },
-        context: {
-          network: networkName,
-          entityTypeName: "Transaction",
-        },
-        raw: JSON.stringify(tx, null, 2), // TODO: this will not return the full RPC request for the individual tx
+      return {
+        networkLabel: networkName,
+        entityType: "Transaction",
+        fieldName: "hash",
+        fieldValue: tx.hash,
       };
-      return txEntity;
     });
   } catch {
     return [];
@@ -380,7 +374,6 @@ async function getAccountByAddress(
     metadata: buildMetadata({
       Spendable: `${balance} ${denom}`,
     }),
-    computed: {},
     context: {
       network: networkName,
       entityTypeName: "Account",
@@ -410,18 +403,14 @@ if (CELESTIA_MOCHA_RPC) {
         ],
         getAssociated: async (entity: Entity) => {
           const data: JSONRPCResponse<Block> = JSON.parse(entity.raw);
-          return (
-            await Promise.all(
-              data.result.block.data.txs.map(
-                async (tx) =>
-                  await getTransactionByHash(
-                    txStringToHash(tx).toUpperCase(),
-                    CELESTIA_MOCHA_RPC,
-                    CELESTIA_MOCHA
-                  )
-              )
-            )
-          ).filter((notnull) => notnull);
+          return data.result.block.data.txs.map((tx) => {
+            return {
+              networkLabel: CELESTIA_MOCHA,
+              entityType: "Transaction",
+              fieldName: "hash",
+              fieldValue: txStringToHash(tx).toUpperCase(),
+            };
+          });
         },
       },
       {
@@ -442,7 +431,26 @@ if (CELESTIA_MOCHA_RPC) {
               ),
           },
         ],
-        getAssociated: (entity: Entity) => entity.computed.Messages ?? [],
+        getAssociated: async (entity: Entity) =>
+          getMessages(JSON.parse(entity.raw)?.result?.tx).map((msg, index) => {
+            return {
+              networkLabel: CELESTIA_MOCHA,
+              entityType: "Message",
+              fieldName: "path",
+              fieldValue: `${entity.uniqueIdentifier}/${index}`,
+            };
+          }),
+      },
+      {
+        name: "Message",
+        getters: [
+          {
+            field: "path",
+            getOne: (path: string) =>
+              getMessageByPath(path, CELESTIA_MOCHA_RPC),
+          },
+        ],
+        getAssociated: async (entity: Entity) => [],
       },
     ],
   });
@@ -469,18 +477,14 @@ if (DYMENSION_HUB_RPC) {
         ],
         getAssociated: async (entity: Entity) => {
           const data: JSONRPCResponse<Block> = JSON.parse(entity.raw);
-          return (
-            await Promise.all(
-              data.result.block.data.txs.map(
-                async (tx) =>
-                  await getTransactionByHash(
-                    txStringToHash(tx).toUpperCase(),
-                    DYMENSION_HUB_RPC,
-                    DYMENSION_HUB
-                  )
-              )
-            )
-          ).filter((notnull) => notnull) as Entity[];
+          return data.result.block.data.txs.map((tx) => {
+            return {
+              networkLabel: DYMENSION_HUB,
+              entityType: "Transaction",
+              fieldName: "hash",
+              fieldValue: txStringToHash(tx).toUpperCase(),
+            };
+          });
         },
       },
       {
@@ -497,7 +501,15 @@ if (DYMENSION_HUB_RPC) {
               getTransactionsByHeight(height, DYMENSION_HUB_RPC, DYMENSION_HUB),
           },
         ],
-        getAssociated: (entity: Entity) => entity.computed.Messages ?? [],
+        getAssociated: async (entity: Entity) =>
+          getMessages(JSON.parse(entity.raw)?.result?.tx).map((msg, index) => {
+            return {
+              networkLabel: DYMENSION_HUB,
+              entityType: "Message",
+              fieldName: "path",
+              fieldValue: `${entity.uniqueIdentifier}/${index}`,
+            };
+          }),
       },
       {
         name: "Account",
@@ -516,6 +528,16 @@ if (DYMENSION_HUB_RPC) {
             )) ?? []
           );
         },
+      },
+      {
+        name: "Message",
+        getters: [
+          {
+            field: "path",
+            getOne: (path: string) => getMessageByPath(path, DYMENSION_HUB_RPC),
+          },
+        ],
+        getAssociated: async (entity: Entity) => [],
       },
     ],
   });
@@ -551,18 +573,14 @@ if (DYMENSION_ROLLAPP_X_RPC) {
         ],
         getAssociated: async (entity: Entity) => {
           const data: JSONRPCResponse<Block> = JSON.parse(entity.raw);
-          return (
-            await Promise.all(
-              data.result.block.data.txs.map(
-                async (tx) =>
-                  await getTransactionByHash(
-                    txStringToHash(tx).toUpperCase(),
-                    DYMENSION_ROLLAPP_X_RPC,
-                    DYMENSION_ROLLAPP_X
-                  )
-              )
-            )
-          ).filter((notnull) => notnull);
+          return data.result.block.data.txs.map((tx) => {
+            return {
+              networkLabel: DYMENSION_ROLLAPP_X,
+              entityType: "Transaction",
+              fieldName: "hash",
+              fieldValue: txStringToHash(tx).toUpperCase(),
+            };
+          });
         },
       },
       {
@@ -587,7 +605,15 @@ if (DYMENSION_ROLLAPP_X_RPC) {
               ),
           },
         ],
-        getAssociated: (entity: Entity) => entity.computed.Messages ?? [],
+        getAssociated: async (entity: Entity) =>
+          getMessages(JSON.parse(entity.raw)?.result?.tx).map((msg, index) => {
+            return {
+              networkLabel: DYMENSION_ROLLAPP_X,
+              entityType: "Message",
+              fieldName: "path",
+              fieldValue: `${entity.uniqueIdentifier}/${index}`,
+            };
+          }),
       },
       {
         name: "Account",
@@ -603,11 +629,24 @@ if (DYMENSION_ROLLAPP_X_RPC) {
           },
         ],
         getAssociated: async (entity: Entity) => {
-          return getTransactionsByAddress(
-            entity.uniqueIdentifier,
-            DYMENSION_ROLLAPP_X
+          return (
+            (await getTransactionsByAddress(
+              entity.uniqueIdentifier,
+              DYMENSION_ROLLAPP_X
+            )) ?? []
           );
         },
+      },
+      {
+        name: "Message",
+        getters: [
+          {
+            field: "path",
+            getOne: (path: string) =>
+              getMessageByPath(path, DYMENSION_ROLLAPP_X_RPC),
+          },
+        ],
+        getAssociated: async (entity: Entity) => [],
       },
     ],
   });
@@ -838,7 +877,6 @@ async function getEVMBlockBy(
         network: networkName,
         entityTypeName: "Block",
       },
-      computed: {},
       raw: JSON.stringify(block),
     };
   } catch (e) {
@@ -927,9 +965,6 @@ async function getEVMTransactionByHash(
         network: networkName,
         entityTypeName: "Transaction",
       },
-      computed: {
-        Receipt: receipt,
-      },
       raw: JSON.stringify(tx),
     };
   } catch (e) {
@@ -977,7 +1012,6 @@ async function getSVMBlockBySlot(
         network: networkName,
         entityTypeName: "Block",
       },
-      computed: {},
       raw: JSON.stringify(block),
     };
   } catch (e) {
@@ -996,7 +1030,7 @@ async function getSVMTransactionBySignature(
 
     var raw = JSON.stringify({
       method: "getTransaction",
-      params: [signature],
+      params: [signature, { maxSupportedTransactionVersion: 0 }],
       id: 1,
       jsonrpc: "2.0",
     });
@@ -1010,6 +1044,7 @@ async function getSVMTransactionBySignature(
     const data = await fetch(endpoint, requestOptions).then((response) =>
       response.json()
     );
+    console.log(data);
     const tx = SolTransactionSchema.parse(data.result);
     return {
       uniqueIdentifier: signature,
@@ -1023,8 +1058,75 @@ async function getSVMTransactionBySignature(
         network: networkName,
         entityTypeName: "Transaction",
       },
-      computed: {},
       raw: JSON.stringify(tx),
+    };
+  } catch (e) {
+    console.log(e);
+    return null;
+  }
+}
+
+async function getEVMLog(
+  path: string,
+  endpoint: string,
+  network: string
+): Promise<Entity | null> {
+  try {
+    const [transactionHash, indexOrAddress] = path.split("/");
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      method: "eth_getTransactionReceipt",
+      params: [transactionHash],
+      id: 1,
+      jsonrpc: "2.0",
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+    };
+
+    const data = await fetch(endpoint, requestOptions).then((response) =>
+      response.json()
+    );
+    const receipt = EthTransactionReceiptSchema.parse(data.result);
+
+    if (isAddress(indexOrAddress)) {
+      return {
+        uniqueIdentifier: String(receipt.contractAddress),
+        uniqueIdentifierLabel: "address",
+        metadata: buildMetadata({
+          Event: "Contract Created",
+        }),
+        context: {
+          network: network,
+          entityTypeName: "Contract",
+        },
+        raw: "",
+      };
+    }
+
+    const log = receipt.logs[Number(indexOrAddress)];
+    const results = await fetch(
+      `https://api.openchain.xyz/signature-database/v1/lookup?event=${log.topics[0]}&filter=true`
+    ).then((res) => res.json());
+    const name =
+      results?.result?.event?.[log.topics[0]]?.[0]?.name ?? log.topics[0];
+    return {
+      uniqueIdentifier: name,
+      uniqueIdentifierLabel: "Event",
+      metadata: buildMetadata({
+        Topics: log.topics,
+        Data: log.data,
+      }),
+      context: {
+        network: "N/A",
+        entityTypeName: "Log",
+      },
+      raw: JSON.stringify(log),
     };
   } catch (e) {
     return null;
@@ -1056,14 +1158,14 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
           getAssociated: async (entity: Entity) => {
             try {
               const block = EthBlockSchema.parse(JSON.parse(entity.raw));
-              return (
-                await Promise.all(
-                  block.transactions.map(
-                    async (tx) =>
-                      await getEVMTransactionByHash(tx, EVM, network.name)
-                  )
-                )
-              ).filter((notnull) => notnull) as Entity[];
+              return block.transactions.map((tx) => {
+                return {
+                  networkLabel: network.name,
+                  entityType: needsPrefix ? "EVM Transaction" : "Transaction",
+                  fieldName: "hash",
+                  fieldValue: tx,
+                };
+              });
             } catch {
               return [];
             }
@@ -1088,7 +1190,6 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
                     network: network.name,
                     entityTypeName: needsPrefix ? "EVM Account" : "Account",
                   },
-                  computed: {},
                   raw: "",
                 };
               },
@@ -1106,14 +1207,14 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
                   }),
                 }
               ).then((res) => res.json());
-              return (
-                await Promise.all(
-                  txIds.result.txs.map(
-                    async (tx: any) =>
-                      await getEVMTransactionByHash(tx.hash, EVM, network.name)
-                  )
-                )
-              ).filter((notnull) => notnull) as Entity[];
+              return txIds.result.txs.map((tx: any) => {
+                return {
+                  networkLabel: network.name,
+                  entityType: needsPrefix ? "EVM Transaction" : "Transaction",
+                  fieldName: "hash",
+                  fieldValue: tx.hash,
+                };
+              });
             } catch {
               return [];
             }
@@ -1138,7 +1239,6 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
                     network: network.name,
                     entityTypeName: "Contract",
                   },
-                  computed: {},
                   raw: "",
                 };
               },
@@ -1156,14 +1256,14 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
                   }),
                 }
               ).then((res) => res.json());
-              return (
-                await Promise.all(
-                  txIds.result.txs.map(
-                    async (tx: any) =>
-                      await getEVMTransactionByHash(tx.hash, EVM, network.name)
-                  )
-                )
-              ).filter((notnull) => notnull) as Entity[];
+              return txIds.result.txs.map((tx: any) => {
+                return {
+                  networkLabel: network.name,
+                  entityType: needsPrefix ? "EVM Transaction" : "Transaction",
+                  fieldName: "hash",
+                  fieldValue: tx.hash,
+                };
+              });
             } catch {
               return [];
             }
@@ -1180,53 +1280,37 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
           ],
           getAssociated: async (entity: Entity) => {
             try {
-              const receipt = EthTransactionReceiptSchema.parse(
-                entity.computed.Receipt
+              const tx = EthTransactionSchema.parse(JSON.parse(entity.raw));
+              var myHeaders = new Headers();
+              myHeaders.append("Content-Type", "application/json");
+
+              const raw = JSON.stringify({
+                method: "eth_getTransactionReceipt",
+                params: [tx.hash],
+                id: 1,
+                jsonrpc: "2.0",
+              });
+
+              const requestOptions = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+              };
+
+              const data = await fetch(EVM, requestOptions).then((response) =>
+                response.json()
               );
-              if (!EthTransactionSchema.parse(JSON.parse(entity.raw)).to) {
-                return [
-                  {
-                    uniqueIdentifier: String(receipt.contractAddress),
-                    uniqueIdentifierLabel: "address",
-                    metadata: buildMetadata({
-                      Event: "Contract Created",
-                    }),
-                    computed: {},
-                    context: {
-                      network: network.name,
-                      entityTypeName: "Contract",
-                    },
-                    raw: "",
-                  },
-                ];
-              }
-              return Promise.all(
-                receipt.logs.map(async (log) => {
-                  const results = await fetch(
-                    `https://api.openchain.xyz/signature-database/v1/lookup?event=${log.topics[0]}&filter=true`
-                  ).then((res) => res.json());
-                  const name =
-                    results?.result?.event?.[log.topics[0]]?.[0]?.name ??
-                    log.topics[0];
-                  return {
-                    uniqueIdentifier: name,
-                    uniqueIdentifierLabel: "event",
-                    metadata: buildMetadata({
-                      Address: log.address,
-                      Topics: { type: "list", payload: log.topics },
-                      Data: log.data,
-                    }),
-                    computed: {},
-                    context: {
-                      network: "N/A", // TODO handle differently
-                      entityTypeName: "Log",
-                    },
-                    raw: JSON.stringify(log),
-                  };
-                })
-              );
-            } catch (e) {
-              console.log(e);
+              const receipt = EthTransactionReceiptSchema.parse(data.result);
+              const contractAddress = receipt.contractAddress;
+              return receipt.logs.map((log, index) => {
+                return {
+                  networkLabel: network.name,
+                  entityType: needsPrefix ? "EVM Log" : "Log",
+                  fieldName: "path",
+                  fieldValue: `${tx.hash}/${contractAddress || index}`,
+                };
+              });
+            } catch {
               return [];
             }
           },
@@ -1250,18 +1334,14 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
           getAssociated: async (entity: Entity) => {
             try {
               const block = SolBlockSchema.parse(JSON.parse(entity.raw));
-              return (
-                await Promise.all(
-                  block.signatures.map(
-                    async (signature) =>
-                      await getSVMTransactionBySignature(
-                        signature,
-                        SVM,
-                        network.name
-                      )
-                  )
-                )
-              ).filter((notnull) => notnull) as Entity[];
+              return block.signatures.map((signature) => {
+                return {
+                  networkLabel: network.name,
+                  entityType: needsPrefix ? "SVM Transaction" : "Transaction",
+                  fieldName: "signature",
+                  fieldValue: signature,
+                };
+              });
             } catch {
               return [];
             }

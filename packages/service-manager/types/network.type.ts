@@ -1,4 +1,5 @@
 import { slugify } from "../utils/slugify";
+import { EntityPath } from "./entity-path.type";
 import { Entity } from "./entity.type";
 
 type GetOneFn = (query: string) => Promise<Entity | null>;
@@ -7,7 +8,7 @@ type GetManyFn = (query: string) => Promise<Entity[]>;
 type EntityType = {
   name: string;
   getters: { field: string; getOne?: GetOneFn; getMany?: GetManyFn }[];
-  getAssociated: (entity: Entity) => Promise<Entity[]>;
+  getAssociated: (entity: Entity) => Promise<EntityPath[]>;
 };
 
 export type Network = {
@@ -69,7 +70,7 @@ export async function getEntities(
 export async function getAssociated(
   network: Network,
   entity: Entity
-): Promise<Entity[]> {
+): Promise<EntityPath[]> {
   const entityType = network.entityTypes.find(
     (entityType) =>
       slugify(entityType.name) === slugify(entity.context.entityTypeName)

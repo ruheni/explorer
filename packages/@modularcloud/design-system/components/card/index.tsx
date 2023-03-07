@@ -41,7 +41,7 @@ export function Card({ type, badgeText, badgeIcon, children, navTo }: Props) {
             </CircleButton>
           </div>
         ) : (
-          <Badge long={true} list={[badgeText ?? "Unknown"]} />
+          <Badge long={true} text={badgeText} />
         )}
         {children}
       </div>

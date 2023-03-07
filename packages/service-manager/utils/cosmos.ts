@@ -139,7 +139,6 @@ export function getMessages(txstr: string): Entity[] {
         uniqueIdentifier: convertToName(message.typeUrl),
         uniqueIdentifierLabel: "Type",
         metadata: convertToKeyValue(decodedMsg),
-        computed: {},
         context: {
           network: "N/A", // TODO: replace network with path
           entityTypeName: "Message",
@@ -153,7 +152,6 @@ export function getMessages(txstr: string): Entity[] {
         metadata: {
           index: { type: "string", payload: String(index) },
         },
-        computed: {},
         context: {
           network: "N/A", // TODO: replace network with path
           entityTypeName: "Message",

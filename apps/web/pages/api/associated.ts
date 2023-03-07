@@ -7,7 +7,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   try {
-    const entity = JSON.parse(req.body);
+    const entity = req.body;
     const entityTypeName = entity.context?.entityTypeName;
     const networkLabel = entity.context?.network;
     if (
@@ -22,10 +22,10 @@ export default async function handler(
     if (!network) {
       return res.status(404).end();
     }
-
     res.json(await getAssociated(network, entity));
     res.status(200).end();
-  } catch {
+  } catch (e) {
+    console.log(e);
     res.status(500).end();
   }
 }

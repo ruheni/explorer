@@ -1,14 +1,14 @@
 import { InferGetServerSidePropsType } from "next";
 import { GetServerSideProps } from "next";
 import { Entity } from "service-manager/types/entity.type";
-import { ValueSchemaType } from "service-manager";
-import { getEntities, getEntity } from "service-manager/types/network.type";
+import { EntityPath, ValueSchemaType } from "service-manager";
+import { getEntity } from "service-manager/types/network.type";
 import {
   loadDynamicNetworks,
   ServiceManager,
 } from "../../../../lib/service-manager";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   TopBar,
   Header,
@@ -19,6 +19,7 @@ import {
   Card,
   CardList,
   Table,
+  ContentWindow,
 } from "@modularcloud/design-system";
 import Image from "next/image";
 import useSWR from "swr";
@@ -115,16 +116,21 @@ function EntityPage({
   const swrResponse = useSWR(
     "/api/associated#" + entity.uniqueIdentifier,
     (url) =>
-      fetch(url, { method: "POST", body: JSON.stringify(entity) }).then((res) =>
-        res.json()
-      ),
+      fetch(url, {
+        method: "POST",
+        body: JSON.stringify(entity),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then((res) => res.json()),
     {
       onSuccess: (data) => {
         if (data.length < 3) setView("cards");
       },
     }
   );
-  const associated: Entity[] = swrResponse.data ?? []; // TODO validation
+  const associated: EntityPath[] = swrResponse.data ?? []; // TODO validation
+  const push = useCallback((path: string) => router.push(path), []);
 
   const isCelestiaEntity = entity.context.network.toLowerCase() === "mocha";
   const isDymensionEntity = !!entity.context.network
@@ -186,103 +192,8 @@ function EntityPage({
       ) : null}
       <div className="flex">
         <div className="grow">
-          <div className="lg:hidden">
-            <TopBar
-              type={entity.context.entityTypeName}
-              id={entity.uniqueIdentifier}
-            >
-              <Image
-                src={`/images/${img.toLowerCase()}-bigger.png`}
-                alt={img}
-                height="28"
-                width="142"
-              />
-            </TopBar>
-          </div>
-          <Header
-            logo={
-              <Link href="/">
-                <div className="font-logo font-[700] text-[1.125rem] flex justify-between items-center">
-                  {name}
-                  {whitelabel && whitelabel !== "dev" ? (
-                    <span className="bg-gradient-to-r from-ocean to-royal bg-clip-text text-transparent">
-                      Scan
-                    </span>
-                  ) : null}
-                </div>
-              </Link>
-            }
-            searchInput={
-              <SearchInput
-                mode={mode}
-                placeholder="Go to hash or height"
-                optionGroups={searchOptions}
-                isOpen={isOpen}
-                handleOpen={setIsOpen}
-                defaultSelected={entity.context.network}
-                onSearch={(searchNetwork: string, term: string) => {
-                  const id = term.trim();
-                  if (isSearchable(id)) {
-                    fetch(`/api/path/${searchNetwork}/${id}`)
-                      .then((response) => {
-                        if (!response.ok) {
-                          throw new Error("No path found.");
-                        }
-                        return response.json();
-                      })
-                      .then((data) => {
-                        if (typeof data.path === "string") {
-                          router.push(data.path.toLowerCase());
-                        }
-                      })
-                      .catch(() => setIsOpen(true));
-                  }
-                }}
-              />
-            }
-            panelContent={
-              <EntityPanel
-                classes="flex lg:hidden"
-                id={entity.uniqueIdentifier}
-                metadata={entity.metadata}
-                context={entity.context}
-                img={img}
-              />
-            }
-            onSwitchView={(view: string) => setView(view)}
-            defaultView={view}
-          />
-          {view === "cards" ? (
-            <CardList>
-              {associated.map((entity) => (
-                <Card
-                  key={entity.uniqueIdentifier}
-                  type={entity.context.entityTypeName}
-                  badgeText={entity.uniqueIdentifier}
-                  badgeIcon="reward"
-                  navTo={
-                    entity.context.network === "N/A"
-                      ? undefined
-                      : () =>
-                          router.push(
-                            `/${entity.context.network}/${entity.context.entityTypeName}/${entity.uniqueIdentifierLabel}/${entity.uniqueIdentifier}`
-                          )
-                  }
-                >
-                  <KeyValueList entries={Object.entries(entity.metadata)} />
-                </Card>
-              ))}
-            </CardList>
-          ) : null}
-          {view === "table" ? (
-            <Table data={associated} router={router} />
-          ) : null}
-          {!associated.length ? (
-            <p className="w-full text-slate text-center">
-              {swrResponse.isLoading
-                ? "Loading..."
-                : `This ${entity.context.entityTypeName.toLowerCase()} is empty.`}
-            </p>
+          {associated ? (
+            <ContentWindow paths={associated} router={push} />
           ) : null}
         </div>
         <EntityPanel
