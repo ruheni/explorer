@@ -151,6 +151,11 @@ export async function Stats({ extended }: Props) {
         </div>
       </div>
 
+      <div className="w-full relative hidden tablet:block h-2">
+        <div className="w-full flex items-center absolute  justify-center">
+          <SvgRadialBgIcon width="100%" />
+        </div>
+      </div>
       {extended ? null : (
         <div className="w-full max-w-2xl px-4 flex gap-16 items-center mt-4 mb-20 justify-center">
           <div className="grid grid-cols-2 tab:grid-cols-3 items-center content-start justify-start w-full gap-x-8 tab:gap-3 gap-y-6">
@@ -179,12 +184,6 @@ export async function Stats({ extended }: Props) {
           </div>
         </div>
       )}
-      {/* 
-      <div className="w-full -mt-[30px] relative hidden tablet:block">
-        <div className=" w-full">
-          <SvgRadialBgIcon width="100%" />
-        </div>
-      </div> */}
 
       {extended && (
         <div className="w-full tablet:max-w-[95%] mt-6 py-6 px-2 tab:px-10 mb-20">

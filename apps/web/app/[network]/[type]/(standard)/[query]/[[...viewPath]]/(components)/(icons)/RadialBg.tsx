@@ -13,10 +13,10 @@ const SvgRadialBgIcon = (props: SVGProps<SVGSVGElement>) => (
       maskUnits="userSpaceOnUse"
       x="0"
       y="0"
-      width="1440"
+      width="100%"
       height="160"
     >
-      <rect width="1440" height="160" fill="#D9D9D9" />
+      <rect width="100%" height="160" fill="#D9D9D9" />
     </mask>
     <g mask="url(#mask0_26_136)">
       <g filter="url(#filter0_f_26_136)">
