@@ -151,13 +151,13 @@ export async function Stats({ extended }: Props) {
         </div>
       </div>
 
-      <div className="w-full relative hidden tablet:block h-2">
-        <div className="w-full flex items-center absolute  justify-center">
-          <SvgRadialBgIcon width="100%" />
+      <div className="w-full relative hidden tablet:block h-6 -mb-4">
+        <div className="w-full flex items-center radial-bg h-20 w-full justify-center">
+          {/* <SvgRadialBgIcon width="100%" /> */}
         </div>
       </div>
       {extended ? null : (
-        <div className="w-full max-w-2xl px-4 flex gap-16 items-center mt-4 mb-20 justify-center">
+        <div className="w-full max-w-2xl px-4 z-10 flex gap-16 items-center mt-4 mb-20 justify-center">
           <div className="grid grid-cols-2 tab:grid-cols-3 items-center content-start justify-start w-full gap-x-8 tab:gap-3 gap-y-6">
             <SummaryPresenter
               icon={<DollarCircled />}
@@ -186,7 +186,7 @@ export async function Stats({ extended }: Props) {
       )}
 
       {extended && (
-        <div className="w-full tablet:max-w-[95%] mt-6 py-6 px-2 tab:px-10 mb-20">
+        <div className="w-full tablet:max-w-[95%] z-10 mt-6 py-6 px-2 tab:px-10 mb-20">
           <BlocksAndTransactionsSummaryDisplay />
         </div>
       )}
