@@ -12,6 +12,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      cursor: {
+        copy: "url('/images/CopyOn.svg'), auto"
+      },
       spacing: {
         header: "4.25rem",
       },
@@ -37,6 +40,13 @@ module.exports = {
           {
             lineHeight: "1.5rem",
             fontWeight: "457",
+          },
+        ],
+        hotkey: [
+          "0.75rem",
+          {
+            lineHeight: "1.5rem",
+            fontWeight: "556",
           },
         ],
       },
