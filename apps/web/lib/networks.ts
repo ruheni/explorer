@@ -265,6 +265,16 @@ export function getEngine() {
       },
     });
     Engine.addConfig("dymension-rollappx", config);
+    config = CreateEVMConfig({
+      endpoint: "https://api.evm.grantchain.dev.eclipsenetwork.xyz/solana",
+      network: {
+        id: "eclipse-grantchain",
+        displayName: "GrantChain",
+        nativeToken: "ETH",
+        logoUrl: "/images/eclipse.png",
+      },
+    });
+    Engine.addConfig("eclipse-grantchain", config);
   }
 
   return {

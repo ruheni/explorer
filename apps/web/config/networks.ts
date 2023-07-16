@@ -144,6 +144,26 @@ const NETWORK_CONFIGS: Record<string, NetworkConfig> = {
       Platform: "Eclipse",
     },
   },
+  ECLIPSE_GRANTCHAIN: {
+    mcId: "ep/8",
+    displayName: "GrantChain",
+    isTestnet: true,
+    isVerified: false,
+    explorerId: "eclipse",
+    slug: "grantchain",
+    slugPrefix: "eclipse",
+    vm: "evm",
+    nativeToken: "ETH",
+    logoUrl: "/images/eclipse.png",
+    searchOptionGroup: "Eclipse",
+    rpcUrl: "https://api.evm.aeg.eclipsenetwork.xyz/solana",
+    stack: {
+      Type: "Rollup",
+      Execution: "EVM",
+      "Data Availability": "Celestia",
+      Platform: "Eclipse",
+    },
+  },
   // Dymension
   DYMENSION_HUB: {
     mcId: "N/A",

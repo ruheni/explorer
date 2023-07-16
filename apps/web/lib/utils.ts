@@ -265,9 +265,9 @@ export function getWhitelabel(): Whitelabel {
           ],
           Eclipse: [
             {
-              displayName: "Nautilus",
-              id: "eclipse-nautilus",
-            },
+              displayName: "GrantChain",
+              id: "eclipse-grantchain"
+            }
             // {
             //   displayName: "Worlds",
             //   id: "eclipse-worlds",

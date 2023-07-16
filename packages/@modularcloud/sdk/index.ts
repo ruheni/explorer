@@ -144,7 +144,9 @@ const NETWORK_ID_MAP: Record<string, string> = {
   "blockspace-race": "2",
   "celestia-blockspace-race": "2",
   "weav": "ep/7",
-  "ecipse-weav": "ep/7",
+  "eclipse-weav": "ep/7",
+  "grantchain": "ep/8",
+  "eclipse-grantchain": "ep/8",
 };
 
 function normalizeNetworkId(networkId: string) {
