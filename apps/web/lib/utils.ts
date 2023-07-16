@@ -229,40 +229,6 @@ export function getWhitelabel(): Whitelabel {
     default:
       return {
         searchOptions: {
-          Celestia: [
-            {
-              displayName: "Blockspace Race",
-              id: "celestia-blockspace-race",
-            },
-            {
-              displayName: "Mocha",
-              id: "celestia-mocha",
-            },
-          ],
-          Dymension: [
-            {
-              displayName: "EVM RollApp",
-              id: "dymension-evm-rollapp",
-            },
-            {
-              displayName: "RollApp X",
-              id: "dymension-rollappx",
-            },
-            {
-              displayName: "Hub",
-              id: "dymension-hub",
-            },
-          ],
-          Caldera: [
-            {
-              displayName: "Goerli",
-              id: "caldera-goerli",
-            },
-            {
-              displayName: "Polygon",
-              id: "caldera-polygon",
-            },
-          ],
           Eclipse: [
             {
               displayName: "GrantChain",
