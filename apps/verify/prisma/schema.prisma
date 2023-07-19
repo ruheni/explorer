@@ -46,5 +46,5 @@ model NativeCurrency {
   name      String  @db.VarChar(255)
   symbol    String  @db.VarChar(255)
   decimals  Int
-  chain     Chain
+  chain     Chain?
 }
