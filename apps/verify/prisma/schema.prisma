@@ -34,7 +34,7 @@ model Chain {
   rpc               String[]
   faucets           String[]
   nativeCurrency    NativeCurrency  @relation(fields: [nativeCurrencyId], references: [id])
-  nativeCurrencyId  Int
+  nativeCurrencyId  Int             @unique
   infoURL           String          @db.VarChar(2048)
   chainId           Int
   createdAt         DateTime        @default(now())
