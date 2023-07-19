@@ -37,7 +37,6 @@ model Chain {
   nativeCurrencyId  Int
   infoURL           String          @db.VarChar(2048)
   chainId           Int
-  explorers         Explorer[]
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 }
