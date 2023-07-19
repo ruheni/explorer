@@ -26,25 +26,26 @@ model Verification {
 }
 
 model Chain {
-  id             Int    @id @default(autoincrement())
-  name           String @db.VarChar(255)
-  title          String @db.VarChar(255)
-  chain          String @db.VarChar(255)
-  icon           String @db.VarChar(255)
-  rpc            String[]
-  faucets        String[]
-  nativeCurrency NativeCurrency
-  infoURL        String @db.VarChar(2048)
-  chainId        Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                Int             @id @default(autoincrement())
+  name              String          @db.VarChar(255)
+  title             String          @db.VarChar(255)
+  chain             String          @db.VarChar(255)
+  icon              String          @db.VarChar(255)
+  rpc               String[]
+  faucets           String[]
+  nativeCurrency    NativeCurrency  @relation(fields: [nativeCurrencyId], references: [id])
+  nativeCurrencyId  Int
+  infoURL           String          @db.VarChar(2048)
+  chainId           Int
+  explorers         Explorer[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 model NativeCurrency {
-  id      Int     @id @default(autoincrement())
-  name    String  @db.VarChar(255)
-  symbol  String  @db.VarChar(255)
-  decimals Int
-  chain   Chain?   @relation(fields: [chainId], references: [id])
-  chainId Int
+  id        Int     @id @default(autoincrement())
+  name      String  @db.VarChar(255)
+  symbol    String  @db.VarChar(255)
+  decimals  Int
+  chain     Chain
 }
