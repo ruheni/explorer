@@ -45,6 +45,6 @@ model NativeCurrency {
   name    String  @db.VarChar(255)
   symbol  String  @db.VarChar(255)
   decimals Int
-  chain   Chain   @relation(fields: [chainId], references: [id])
+  chain   Chain?   @relation(fields: [chainId], references: [id])
   chainId Int
 }
