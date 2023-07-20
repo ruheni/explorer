@@ -25,16 +25,6 @@ model Verification {
   uploadedUrl        String
 }
 
-model Chain {
-  id        Int      @id @default(autoincrement())
-  name      String
-  network   String
-  networkId String
-  currency  String
-  rpc       String[]
-  faucets   String[]
-  infoURL   String
-}
 
 model Chain {
   id                Int             @id @default(autoincrement())

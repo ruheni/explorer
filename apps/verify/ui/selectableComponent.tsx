@@ -1,50 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { Chain } from '../config/types/chain';
+import React, { useEffect, useState,CSSProperties } from 'react';
+import { Chain } from ".prisma/client";
+import axios from "axios";
+import ClipLoader from "react-spinners/ClipLoader";
+const override: CSSProperties = {
+    borderColor: "#2753bb",
+    margin:0,
+  };
+  
+  
 function SelectableComponent({ onSelectionChange }) {
     const [data, setData] = useState<Chain[]>([]);
+    let [loading, setLoading] = useState(true);
+
 
     // Fetch the data from API
     useEffect(() => {
         const fetchData = async () => {
             try {
-                //test data it will be removed
-                const data = [{
-                    "name": "Nautilus Chain",
-                    "chain": "ETH",
-                    "rpc": ["https://triton.api.nautchain.xyz"],
-                    "faucets": ["https://faucet.eclipse.builders"],
-                    "nativeCurrency": "Nautilus Zebec Testnet Tokens",
-                    "infoURL": "https://docs.nautchain.xyz",
-                    "shortName": "NAUT",
-                    "chainId": 91002,
-                    "networkId": 91002,
-                    "explorers": [
-                      {
-                        "name": "Nautscan",
-                        "url": "https://triton.nautscan.com",
-                        "standard": "EIP3091"
-                      }
-                    ]
-                  },{"name": "Triton",
-                  "chain": "ETH",
-                  "rpc": ["https://triton.api.nautchain.xyz"],
-                  "faucets": ["https://faucet.eclipse.builders"],
-                  "nativeCurrency": "Nautilus Zebec Testnet Tokens",
-                  "infoURL": "https://docs.nautchain.xyz",
-                  "shortName": "NAUT",
-                  "chainId": 91002,
-                  "networkId": 91002,
-                  "explorers": [
-                    {
-                      "name": "Nautscan",
-                      "url": "https://triton.nautscan.com",
-                      "standard": "EIP3091"
-                    }
-                  ]
-                }]
-                setData(data);
+                const chainList = await axios.get(
+                    `api/chain-config/get-chainlist`,
+                  )
+                  .catch((error) => {
+                    console.error("Error calling API:", error);
+                  });
+                setData(chainList?.data);
+                
             } catch (error) {
                 console.error('Error:', error);
+            }
+            finally{
+                    setLoading(false)
             }
         };
         fetchData();
@@ -56,13 +41,24 @@ function SelectableComponent({ onSelectionChange }) {
     };
 
     return (
-        <select onChange={handleSelection} className='rounded-md  mx-1 pl-1  flex justify-center items-center border-2 border-[#2753bb] border-solid'>
+        <div className='flex'>
+             <select onChange={handleSelection} className={(loading ? "hidden": "rounded-md  mx-1 pl-1  flex justify-center items-center border-2 border-[#2753bb] border-solid")}>
             {data.map((item, index) => (
                 <option key={index} value={item.chainId} >
                     {item.name}
                 </option>
             ))}
         </select>
+            <ClipLoader
+        color='#2753bb'
+        loading={loading}
+        cssOverride={override}
+        size={35}
+        aria-label="Loading Spinner"
+        data-testid="loader"
+      />
+        </div>
+       
     );
 }
 
