@@ -5,11 +5,12 @@ import { ToastContainer, toast } from "react-toastify";
 import JSZip from "jszip";
 import { readFileData } from "../utils/readFileData";
 import { error } from "console";
+import SelectableComponent from "./selectableComponent";
 
 export default function VerifyAndUpload() {
   const [files, setFiles] = useState<FileList>();
   const [contractAddress, setContractAddress] = useState<string>("");
-
+  const [chainId, setChainId] = useState<string>("91002");
   type VerificationStatus = "FULL" | "PARTIAL" | null;
 
   type ContractData = {
@@ -22,10 +23,14 @@ export default function VerifyAndUpload() {
 
   const data: ContractData = {
     contractAddress: contractAddress,
-    chainId: "91002", // hardcoded as of now
+    chainId: chainId,
     files: {},
     uploadedUrl: "",
     verificationStatus: null,
+  };
+
+  const handleChainSelectionChange = (chainId: string) => {
+    setChainId(chainId);
   };
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +86,7 @@ export default function VerifyAndUpload() {
             Pragma: "no-cache",
             Expires: "0",
           },
-        }
+        },
       )
       .catch((error) => {
         console.error("Error calling API:", error);
@@ -103,7 +108,7 @@ export default function VerifyAndUpload() {
           contractAddress: data.contractAddress,
           chain: data.chainId,
           files: data.files,
-        }
+        },
       );
       if (sourcifyResponse.status == 200) {
         await uploadFile(zipFile);
@@ -113,7 +118,7 @@ export default function VerifyAndUpload() {
             : "PARTIAL";
         const persistVerified = await axios.post(
           "api/contract-verification/persist-verified",
-          data
+          data,
         );
         if (persistVerified?.status === 200) {
           toast.update(toastId, {
@@ -123,9 +128,8 @@ export default function VerifyAndUpload() {
             closeOnClick: true,
           });
         }
-      }
-      else {
-           throw new Error("Error In Contract verification");
+      } else {
+        throw new Error("Error In Contract verification");
       }
     } catch (error: any) {
       if (error.response) {
@@ -146,7 +150,7 @@ export default function VerifyAndUpload() {
       const getFileUploadUrl = await axios.get(
         `api/file-upload/generateurl?file=${`${
           contractAddress + "_sourcefiles.zip"
-        }`}&contractaddress=${contractAddress}`
+        }`}&contractaddress=${contractAddress}`,
       );
 
       if (getFileUploadUrl.status === 200) {
@@ -157,11 +161,10 @@ export default function VerifyAndUpload() {
           },
         });
         if (uploadFile.status === 200) {
-          // it will Get the base URL from the presigned S3 URL 
-          //then remove query parameter so that we get a clean url of where the file is uploaded and it is returned  
+          // it will Get the base URL from the presigned S3 URL
+          //then remove query parameter so that we get a clean url of where the file is uploaded and it is returned
           return getFileUploadUrl.data.url.split("?")[0];
-        }
-        else {
+        } else {
           throw new Error("File Upload Failed");
         }
       }
@@ -208,6 +211,12 @@ export default function VerifyAndUpload() {
             htmlFor="file-upload"
             className="custom-file-upload relative w-full pt-5"
           >
+            <div className="flex">
+              <p>Select Chain:</p>
+              <SelectableComponent
+                onSelectionChange={handleChainSelectionChange}
+              />
+            </div>
             <div className="w-full py-4">
               <input
                 type="text"
