@@ -61,16 +61,16 @@ async function getBlockMetrics() {
   };
 }
 
-async function getRealTimeMetrics() {
-  const metrics = await fetch("https://triton.nautscan.com/api/metrics").then(
-    (res) => res.json(),
-  );
-  return {
-    contractsDeployed: metrics.result.realTimeMetrics.CONTRACT,
-    totalTransactions: metrics.result.realTimeMetrics.TRANSACTION,
-    walletAddresses: metrics.result.realTimeMetrics.UNIQUE_ADDRESS,
-  };
-}
+// async function getRealTimeMetrics() {
+//   const metrics = await fetch("https://nautscan.com/api/metrics").then(
+//     (res) => res.json(),
+//   );
+//   return {
+//     contractsDeployed: metrics.result.realTimeMetrics.CONTRACT,
+//     totalTransactions: metrics.result.realTimeMetrics.TRANSACTION,
+//     walletAddresses: metrics.result.realTimeMetrics.UNIQUE_ADDRESS,
+//   };
+// }
 
 async function getTransactionVolumes(): Promise<
   ExplorerLineChartProps["data"]

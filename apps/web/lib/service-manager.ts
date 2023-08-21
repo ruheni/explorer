@@ -358,7 +358,7 @@ async function getTransactionsByAddress(address: string, networkName: string) {
 
 async function getAccountByAddress(
   address: string,
-  networkBase: string,
+  // networkBase: string,   // declared
   networkName: string,
 ) {
   let queryInput, denom;
@@ -741,7 +741,7 @@ const SolTransactionSchema = z.object({
     preBalances: z.number().array(),
     preTokenBalances: SolTokenBalanceSchema.array(),
     rewards: SolRewardsSchema.array(),
-    status: z.any(), // deprecated
+    // status: z.any(), // deprecated
     logMessages: z.string().array().nullish(),
     returnData: z
       .object({
@@ -1171,9 +1171,6 @@ async function getSVMTransactionBySignature(
 }
 
 export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
-  if (network.id === "triton") {
-    network.id = "91002";
-  }
   if (network.id === "caldera") {
     network.id = "1";
   }
@@ -1244,24 +1241,6 @@ export function addRemote(network: z.infer<typeof RemoteServiceRequestSchema>) {
                   nativeTokenBalance =
                     balanceResponse.result.nativeTokenBalance;
                 } catch {}
-                return {
-                  uniqueIdentifier: address,
-                  uniqueIdentifierLabel: "address",
-                  metadata: buildMetadata({
-                    [network.name.toLowerCase() === "triton"
-                      ? "ZBC"
-                      : "Native"]: new Decimal(nativeTokenBalance)
-                      .dividedBy(new Decimal(10).pow(18))
-                      .toString(),
-                    ...balances,
-                  }),
-                  context: {
-                    network: network.name,
-                    entityTypeName: needsPrefix ? "EVM Account" : "Account",
-                  },
-                  computed: {},
-                  raw: "",
-                };
               },
             },
           ],

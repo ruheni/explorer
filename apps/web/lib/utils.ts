@@ -89,20 +89,6 @@ export function getWhitelabel(): Whitelabel {
     name: ["Naut", "Scan"],
     env: "nautscan",
   };
-    case "nautilus":
-      return {
-        searchOptions: {
-          Nautilus: [
-            {
-              displayName: "Triton",
-              id: "triton",
-            },
-          ],
-        },
-        defaultNetwork: "triton",
-        name: ["Naut", "Scan"],
-        env: "nautilus",
-      };
     case "waev":
       return {
         searchOptions: {

@@ -30,9 +30,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     case "mainnet": // nautilus mainnet
       path = "v2/1";
       break;
-    case "triton":
-      path = "eclipse/91002";
-      break;
     case "proteus":
       path = "ep/6";
       break;
