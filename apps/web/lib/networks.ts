@@ -8,12 +8,13 @@ export function getEngine() {
   let config: EngineConfig;
   if (whitelabel.env === "nautscan") {
       config = CreateEVMConfig({
-        endpoint: "https://api.evm.nautilus.prod.eclipsenetwork.xyz",
+        endpoint: "https://api.nautilus.nautchain.xyz/",
         network: {
           id: "mainnet",
           displayName: "Mainnet",
           nativeToken: "ETH",
           logoUrl: "/images/nautilus.png",
+          sourcifyChainId: "22222"
         },
       });
       Engine.addConfig("mainnet", config);
