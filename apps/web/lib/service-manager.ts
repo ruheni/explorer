@@ -358,7 +358,7 @@ async function getTransactionsByAddress(address: string, networkName: string) {
 
 async function getAccountByAddress(
   address: string,
-  // networkBase: string,   // declared
+  networkBase: string,  
   networkName: string,
 ) {
   let queryInput, denom;
