@@ -138,13 +138,7 @@ export default function VerifyAndUpload() {
       }
     } catch (error: any) {
       if (error.response) {
-        if (error.response.data.errors) {
-          error = error.response.data.errors[0].message;
-        } else if (error.response.data.message) {
-          error = error.response.data.message;
-        } else {
-          error = error.response.data.error;
-        }
+        error = error.response.data.message;
       }
       console.error("File Verification or ", error);
       toast.update(toastId, {
