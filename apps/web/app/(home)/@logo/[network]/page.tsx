@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAllNetworks, getSingleNetworkCached } from "~/lib/network";
 import type { FetchLoadArgs } from "~/lib/shared-utils";
+import { BigLogo } from "~/ui/big-logo";
 
 interface Props {
   params: Pick<FetchLoadArgs, "network">;
@@ -9,22 +10,7 @@ export default async function NetworkLogo(props: Props) {
   const network = await getSingleNetworkCached(props.params.network);
   if (!network) notFound();
 
-  return (
-    <div className="flex flex-col gap-8 items-center mt-44">
-      <small className="uppercase text-lg ">MODULAR CLOUD</small>
-
-      <p className="font-logo text-5xl font-bold md:text-6xl capitalize">
-        <span
-          className="text-transparent bg-clip-text"
-          style={{
-            backgroundImage: network.config.cssGradient,
-          }}
-        >
-          {network.chainBrand}
-        </span>
-      </p>
-    </div>
-  );
+  return <BigLogo gradient1="linear-gradient(94deg, #6833FF 19.54%, #336CFF 75.56%, #33B6FF 93.7%)" gradient2="linear-gradient(314deg, #6833FF 15.63%, #336CFF 65.12%, #33B6FF 121.07%)" text={network.chainBrand} />;
 }
 
 export async function generateStaticParams() {
